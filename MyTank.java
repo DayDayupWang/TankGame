@@ -1,5 +1,9 @@
+import java.util.Vector;
+
 public class MyTank extends Tank {
     Shot shot = null;
+    // 发射多颗子弹的集合
+    Vector<Shot> shots = new Vector<Shot>();
 
     public MyTank(int x, int y) {
         super(x, y);
@@ -22,6 +26,7 @@ public class MyTank extends Tank {
                 break;
 
         }
+        shots.add(shot);
         new Thread(shot).start();
     }
 

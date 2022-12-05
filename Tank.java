@@ -2,7 +2,7 @@ public class Tank {
     private int x;
     private int y;
     private int direction = 0;// 0123上右下左
-    private int speed = 1;
+    private int speed = 2;
 
     public int getSpeed() {
         return speed;
@@ -13,19 +13,39 @@ public class Tank {
     }
 
     public void moveUp() {
-        y -= speed;
+        if (y <= 0) {
+            return;
+        } else {
+            y -= speed;
+        }
+
     }
 
     public void moveRight() {
-        x += speed;
+        if (x >= 930) {
+            return;
+        } else {
+            x += speed;
+        }
+
     }
 
     public void moveDown() {
-        y += speed;
+        if (y >= 650) {
+            return;
+        } else {
+            y += speed;
+        }
+
     }
 
     public void moveLeft() {
-        x -= speed;
+        if (x <= 10) {
+            return;
+        } else {
+            x -= speed;
+        }
+
     }
 
     public Tank(int x, int y) {

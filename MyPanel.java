@@ -8,37 +8,94 @@ import java.util.Vector;
 public class MyPanel extends JPanel implements KeyListener, Runnable {
     // 定义我的坦克
     MyTank mytank = null;
-    Vector<EnemyTank> eT = new Vector<EnemyTank>();
+    // 敌方坦克存放
+    Vector<EnemyTank> eT = new Vector<>();
+    // 定义一个存放Node对象的Vector，用于恢复敌人坦克坐标和方向
+    Vector<Node> nodes = new Vector<Node>();
+
     // 敌人坦克数量
     int eTSzie = 3;
 
-    public MyPanel() {
-        mytank = new MyTank(100, 100);// 初始化自己的坦克
-        mytank.setSpeed(2);
-        // 初始化敌人坦克
-        for (int i = 0; i < eTSzie; i++) {
-            EnemyTank enemyTank = new EnemyTank(100 * (i + 1), 0);
-            enemyTank.setDirection(2);
-            // 给敌方坦克加入了一个子弹
-            Shot shot = new Shot(enemyTank.getX() + 20, enemyTank.getY() + 60, enemyTank.getDirection(), 5);
-            enemyTank.shots.add(shot);
-            // 启动shot对象
-            new Thread(shot).start();
-            // 加入坦克集
-            eT.add(enemyTank);
+    public MyPanel(String key){
+        // 把画板对象的敌方坦克设置给Recorder的敌方坦克们
+        nodes = Recorder.getNodes();
+        Recorder.setEnemyTanks(eT);
+        // 初始化自己的坦克
+        mytank = new MyTank(100, 100);
+        switch (key) {
+            case "1":
+                // 初始化敌人坦克
+                for (int i = 0; i < eTSzie; i++) {
+                    EnemyTank enemyTank = new EnemyTank(100 * (i + 1), 0);
+                    enemyTank.setDirection(2);
+                    // 启动敌人坦克线程，让它动起来
+                    new Thread(enemyTank).start();
+                    // 给敌方坦克加入了一个子弹
+                    Shot shot = new Shot(enemyTank.getX() + 20, enemyTank.getY() + 60, enemyTank.getDirection(), 5);
+                    enemyTank.shots.add(shot);
+                    // 启动shot对象
+                    new Thread(shot).start();
+                    // 加入坦克集
+                    eT.add(enemyTank);
 
+                }
+                break;
+            case "2":
+                // 初始化敌人坦克
+                for (int i = 0; i < nodes.size(); i++) {
+                    Node node = nodes.get(i);
+                    EnemyTank enemyTank = new EnemyTank(node.getX(), node.getY());
+                    enemyTank.setDirection(node.getDirect());
+                    // 启动敌人坦克线程，让它动起来
+                    new Thread(enemyTank).start();
+                    // 给敌方坦克加入了一个子弹
+                    Shot shot = new Shot(enemyTank.getX() + 20, enemyTank.getY() + 60, enemyTank.getDirection(), 5);
+                    enemyTank.shots.add(shot);
+                    // 启动shot对象
+                    new Thread(shot).start();
+                    // 加入坦克集
+                    eT.add(enemyTank);
+
+                }
+                break;
+
+            default:
+                System.out.println("输入有误");
+                break;
         }
+
+    }
+
+    public void showInfo(Graphics g) {
+        g.setColor(Color.BLACK);
+        Font font = new Font("宋体", Font.BOLD, 25);
+        g.setFont(font);
+        g.drawString("您累计击毁敌方坦克", 1020, 30);
+        drawTank(1020, 60, g, 0, 1);// 画出一个敌方坦克
+        g.setColor(Color.BLACK);// 需要重新设置颜色
+        // Recorder.getAllETankNum()
+        g.drawString(Recorder.getAllETankNum() + "", 1080, 100);
     }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);// paint(g)函数会重绘图像，要加上super.paint(g)，表示在原来图像的基础上，再画图
         g.fillRect(0, 0, 1000, 750);// 填充矩形，默认黑色
+        showInfo(g);
         // 画出坦克-封装方法
         drawTank(mytank.getX(), mytank.getY(), g, mytank.getDirection(), 0);
-        // 自己坦克子弹的绘图控制
-        if (mytank.shot != null && mytank.shot.isLive == true) {
-            g.fill3DRect(mytank.shot.x, mytank.shot.y, 2, 2, false);
+
+        // // 自己坦克子弹的绘图控制
+        // if (mytank.shot != null && mytank.shot.isLive == true) {
+        // g.fill3DRect(mytank.shot.x, mytank.shot.y, 2, 2, false);
+        // }
+        // 将子弹集合Shots遍历取出绘制
+        for (int i = 0; i < mytank.shots.size(); i++) {
+            Shot shot = mytank.shots.get(i);
+            // 假如子弹存在并存活
+            if (shot != null && shot.isLive == true) {
+                g.draw3DRect(shot.x, shot.y, 2, 2, false);
+            }
         }
 
         // 画出敌人坦克
@@ -73,6 +130,8 @@ public class MyPanel extends JPanel implements KeyListener, Runnable {
                         && s.y < enemyTank.getY() + 60) {
                     s.isLive = false;
                     enemyTank.isLive = false;
+                    eT.remove(enemyTank);
+                    Recorder.addallETankNum();
                 }
                 break;
             case 1:// 向右
@@ -81,6 +140,8 @@ public class MyPanel extends JPanel implements KeyListener, Runnable {
                         && s.y < enemyTank.getY() + 40) {
                     s.isLive = false;
                     enemyTank.isLive = false;
+                    eT.remove(enemyTank);
+                    Recorder.addallETankNum();
                 }
                 break;
         }
@@ -109,8 +170,12 @@ public class MyPanel extends JPanel implements KeyListener, Runnable {
             mytank.moveLeft();
         }
         if (e.getKeyCode() == KeyEvent.VK_J) {
+            // 判断我方坦克子弹是否销毁，一次只发射一颗
+            // if (mytank.shot == null || !mytank.shot.isLive) {
+            // mytank.shotEnemy();
+            // }
+            // 发射多颗子弹
             mytank.shotEnemy();
-
         }
         // 让面板重绘
         this.repaint();
@@ -177,7 +242,7 @@ public class MyPanel extends JPanel implements KeyListener, Runnable {
     }
 
     @Override
-    public void run() {// 每隔100ms，重绘区域，刷新绘图区域，子弹得以移动
+    public void run() {// 每隔100ms，重绘区域，刷新绘图区域
 
         while (true) {
             try {
@@ -186,12 +251,25 @@ public class MyPanel extends JPanel implements KeyListener, Runnable {
 
                 e.printStackTrace();
             }
-            // 判断是否击中了坦克
-            if (mytank.shot != null && mytank.shot.isLive) {
-                // 遍历敌人坦克
-                for (int i = 0; i < eT.size(); i++) {
-                    EnemyTank enemyTank = eT.get(i);
-                    hitTank(mytank.shot, enemyTank);
+            // // 判断一颗是否击中了坦克
+            // if (mytank.shot != null && mytank.shot.isLive) {
+            // // 遍历敌人坦克
+            // for (int i = 0; i < eT.size(); i++) {
+            // EnemyTank enemyTank = eT.get(i);
+            // hitTank(mytank.shot, enemyTank);
+            // }
+            // }
+
+            // 判断vector集合子弹是否击中了坦克 shots
+            for (int j = 0; j < mytank.shots.size(); j++) {
+                Shot shot = mytank.shots.get(j);
+                if (shot != null && shot.isLive) {
+                    // 遍历敌人坦克
+                    for (int i = 0; i < eT.size(); i++) {
+                        EnemyTank enemyTank = eT.get(i);
+                        hitTank(shot, enemyTank);
+                    }
+
                 }
             }
             this.repaint();

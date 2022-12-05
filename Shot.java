@@ -44,7 +44,9 @@ public class Shot implements Runnable {
                     break;
             }
             System.out.println("子弹在" + x + ", " + y + "位置移动");
-            if (x < 0 || x > 1000 || y < 0 || y > 750) {
+            // 当子弹碰到敌人坦克(isLive已经为假时)和边界时就应该结束线程
+            if (!isLive || x < 0 || x > 1000 || y < 0 || y > 750) {
+                System.out.println("子弹线程退出");
                 isLive = false;
                 break;
             }
